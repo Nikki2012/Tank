@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Танчики с картинками</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-area {
+            width: 150vw; /* Increased width */
+            height: 150vh; /* Increased height */
+            background-color: green; /* Background image */
+            background-size: cover;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tank {
+            width: 40px;
+            height: 40px;
+            background-size: cover;
+            position: absolute;
+            transition: transform 0.1s ease; /* Плавний поворот танка */
+        }
+
+        #tank1 {
+            background-image: url('https://i.postimg.cc/zBLcLMJ1/Hull-08.png');
+        }
+
+        #tank2 {
+            background-image: url('https://i.postimg.cc/T1VQgvFB/Hull-08.png');
+        }
+
+        .bullet {
+            width: 10px;
+            height: 10px;
+            background-color: black; /* Куля як чорний кружок */
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .obstacle {
+            width: 100px;
+            height: 100px;
+            background-color: brown;
+            position: absolute;
+        }
+
+        /* Стиль для хапу */
+        .health-pack {
+            width: 20px;
+            height: 20px;
+            background-color: red; /* Хап у вигляді червоного квадрата */
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-area">
+        <div id="tank1" class="tank"></div>
+        <div id="tank2" class="tank"></div>
+
+        <!-- Перешкоди на карті -->
+        <div class="obstacle" style="left: 400px; top: 300px;"></div>
+        <div class="obstacle" style="left: 800px; top: 600px;"></div>
+        <div class="obstacle" style="left: 600px; top: 200px;"></div>
+        <div class="obstacle" style="left: 300px; top: 700px;"></div>
+        <div class="obstacle" style="left: 100px; top: 400px;"></div>
+        <div class="obstacle" style="left: 900px; top: 100px;"></div>
+        <div class="obstacle" style="left: 200px; top: 300px;"></div>
+        <div class="obstacle" style="left: 700px; top: 500px;"></div>;
+
+        <!-- Хап -->
+        <div class="health-pack" style="left: 600px; top: 400px;"></div>
+    </div>
+
+    <script>
+        const tank1 = document.getElementById("tank1");
+        const tank2 = document.getElementById("tank2");
+        const gameArea = document.getElementById("game-area");
+        const obstacles = document.querySelectorAll('.obstacle');
+        const healthPack = document.querySelector('.health-pack');
+
+        let tank1X = 200, tank1Y = 200;
+        let tank2X = 400, tank2Y = 400;
+        let tank1Angle = 0, tank2Angle = 0;
+
+        let tank1Direction = "up";
+        let tank2Direction = "up";
+
+        const speed = 2;
+
+        function createBullet(x, y, direction, shooter) {
+            const bullet = document.createElement("div");
+            bullet.classList.add("bullet");
+            gameArea.appendChild(bullet);
+
+            let bulletX = x;
+            let bulletY = y;
+            const bulletSpeed = 5;
+
+            function moveBullet() {
+                switch (direction) {
+                    case "up":
+                        bulletY -= bulletSpeed;
+                        break;
+                    case "down":
+                        bulletY += bulletSpeed;
+                        break;
+                    case "left":
+                        bulletX -= bulletSpeed;
+                        break;
+                    case "right":
+                        bulletX += bulletSpeed;
+                        break;
+                    case "up-left":
+                        bulletX -= bulletSpeed;
+                        bulletY -= bulletSpeed;
+                        break;
+                    case "up-right":
+                        bulletX += bulletSpeed;
+                        bulletY -= bulletSpeed;
+                        break;
+                    case "down-left":
+                        bulletX -= bulletSpeed;
+                        bulletY += bulletSpeed;
+                        break;
+                    case "down-right":
+                        bulletX += bulletSpeed;
+                        bulletY += bulletSpeed;
+                        break;
+                }
+
+                bullet.style.left = bulletX + "px";
+                bullet.style.top = bulletY + "px";
+
+                // Перевірка на попадання в танки
+                if (checkCollision(bulletX, bulletY, tank2X, tank2Y) && shooter !== "tank2") {
+                    tank2.remove(); // Удаление танка 2
+                    bullet.remove();
+                } else if (checkCollision(bulletX, bulletY, tank1X, tank1Y) && shooter !== "tank1") {
+                    tank1.remove(); // Удаление танка 1
+                    bullet.remove();
+                }
+
+                if (bulletX < 0 || bulletX > window.innerWidth || bulletY < 0 || bulletY > window.innerHeight) {
+                    bullet.remove();
+                } else {
+                    requestAnimationFrame(moveBullet);
+                }
+            }
+
+            moveBullet();
+        }
+
+        function checkCollision(bulletX, bulletY, tankX, tankY) {
+            return bulletX >= tankX && bulletX <= tankX + 40 && bulletY >= tankY && bulletY <= tankY + 40;
+        }
+
+        function updateTankRotation() {
+            switch (tank1Direction) {
+                case "up":
+                    tank1Angle = 0;
+                    break;
+                case "down":
+                    tank1Angle = 180;
+                    break;
+                case "left":
+                    tank1Angle = -90;
+                    break;
+                case "right":
+                    tank1Angle = 90;
+                    break;
+                case "up-left":
+                    tank1Angle = -45;
+                    break;
+                case "up-right":
+                    tank1Angle = 45;
+                    break;
+                case "down-left":
+                    tank1Angle = 135;
+                    break;
+                case "down-right":
+                    tank1Angle = -135;
+                    break;
+            }
+
+            switch (tank2Direction) {
+                case "up":
+                    tank2Angle = 0;
+                    break;
+                case "down":
+                    tank2Angle = 180;
+                    break;
+                case "left":
+                    tank2Angle = -90;
+                    break;
+                case "right":
+                    tank2Angle = 90;
+                    break;
+                case "up-left":
+                    tank2Angle = -45;
+                    break;
+                case "up-right":
+                    tank2Angle = 45;
+                    break;
+                case "down-left":
+                    tank2Angle = 135;
+                    break;
+                case "down-right":
+                    tank2Angle = -135;
+                    break;
+            }
+
+            tank1.style.transform = `translate(${tank1X}px, ${tank1Y}px) rotate(${tank1Angle}deg)`;
+            tank2.style.transform = `translate(${tank2X}px, ${tank2Y}px) rotate(${tank2Angle}deg)`;
+        }
+
+        document.addEventListener("keydown", function (event) {
+            switch (event.key) {
+                case "w":
+                    tank1Y -= speed;
+                    tank1Direction = "up";
+                    break;
+                case "s":
+                    tank1Y += speed;
+                    tank1Direction = "down";
+                    break;
+                case "a":
+                    tank1X -= speed;
+                    tank1Direction = "left";
+                    break;
+                case "d":
+                    tank1X += speed;
+                    tank1Direction = "right";
+                    break;
+
+                // Діагональні рухи
+                case "q":
+                    tank1X -= speed;
+                    tank1Y -= speed;
+                    tank1Direction = "up-left";
+                    break;
+                case "e":
+                    tank1X += speed;
+                    tank1Y -= speed;
+                    tank1Direction = "up-right";
+                    break;
+                case "z":
+                    tank1X -= speed;
+                    tank1Y += speed;
+                    tank1Direction = "down-left";
+                    break;
+                case "c":
+                    tank1X += speed;
+                    tank1Y += speed;
+                    tank1Direction = "down-right";
+                    break;
+
+                case "f":
+                    createBullet(tank1X + 15, tank1Y + 15, tank1Direction, "tank1");
+                    break;
+
+                case "ArrowUp":
+                    tank2Y -= speed;
+                    tank2Direction = "up";
+                    break;
+                case "ArrowDown":
+                    tank2Y += speed;
+                    tank2Direction = "down";
+                    break;
+                case "ArrowLeft":
+                    tank2X -= speed;
+                    tank2Direction = "left";
+                    break;
+                case "ArrowRight":
+                    tank2X += speed;
+                    tank2Direction = "right";
+                    break;
+
+                // Діагональні рухи для танка 2
+                case "Home": // Home для вгору-вліво
+                    tank2X -= speed;
+                    tank2Y -= speed;
+                    tank2Direction = "up-left";
+                    break;
+                case "PageUp": // PageUp для вгору-вправо
+                    tank2X += speed;
+                    tank2Y -= speed;
+                    tank2Direction = "up-right";
+                    break;
+                case "End": // End для вниз-вліво
+                    tank2X -= speed;
+                    tank2Y += speed;
+                    tank2Direction = "down-left";
+                    break;
+                case "PageDown": // PageDown для вниз-вправо
+                    tank2X += speed;
+                    tank2Y += speed;
+                    tank2Direction = "down-right";
+                    break;
+
+                case " ": // Пробіл для стрільби танка 2
+                    createBullet(tank2X + 15, tank2Y + 15, tank2Direction, "tank2");
+                    break;
+
+                // Перевірка на підбір хапу
+                case "x": // Клавіша 'x' для підбору танка 1
+                    if (checkCollision(tank1X, tank1Y, parseInt(healthPack.style.left), parseInt(healthPack.style.top))) {
+                        healthPack.remove(); // Удаление хапу
+                        alert("Танк 1 підібрав хап!");
+                    }
+                    break;
+
+                case "y": // Клавіша 'y' для підбору танка 2
+                    if (checkCollision(tank2X, tank2Y, parseInt(healthPack.style.left), parseInt(healthPack.style.top))) {
+                        healthPack.remove(); // Удаление хапу
+                        alert("Танк 2 підібрав хап!");
+                    }
+                    break;
+            }
+
+            updateTankRotation();
+        });
+
+        updateTankRotation(); // Оновлення початкового стану
+    </script>
+</body>
+</html>
